@@ -241,8 +241,8 @@ A car's **When Empty** waybill list offers every loader that can fill it. If you
 ## 6. Save
 
 Click **Save** at the top of the Map Editor. On a layered map, the game saves only what differs from the base map, as a
-patch. This file is in your ModDev mod beside `Definitions.json`, named by your Map definition (usually `Map.json`). The
-patch holds:
+patch. This file is in your mod's folder in `RailroaderMods\ModDev`, in its `Data` folder, named by your Map
+definition's `mapData` (usually `Data\Map.json`). The patch holds:
 
 - your new areas, industries, spans and components
 - the fields you changed on the base map's own ones
