@@ -11,6 +11,8 @@ Experimental. These guides will change with them. Corrections are welcome as iss
   and how it differs from the mod you release.
 - [Adding terrain tiles](terrain-tiles.md): fetching new terrain beside the base map in the Map Editor, and adding it to
   the base map with a mod.
+- [Shaping the ground with terrain masks](terrain-masks.md): levelling ground on the base map for yards, industry sites
+  and roads, where the terrain brushes can't be used.
 - [Adding industries](industries.md): areas, industries, track spans and components in the Map Editor, changing
   base-game industries, and adding them to the base map with a mod.
 

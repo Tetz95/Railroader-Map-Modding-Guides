@@ -189,7 +189,8 @@ one edge, so check yours.
 - **Inspect:** look along every edge between your tiles and the base map.
 - **Fix:** use the editor's flatten and smooth brushes on your side of the edge, then save and copy `Terrain/` into the
   pack again.
-- **Limitation:** brushes only get the edges close, not identical, and the base tiles can't be edited.
+- **Limitation:** brushes only get the edges close, not identical, and the base tiles can't be edited. To shape the
+  ground on the base map's side, use [terrain masks](terrain-masks.md).
 
 ## 7. Install and enable (game closed)
 
