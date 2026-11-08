@@ -376,3 +376,7 @@ Load the base map and check that:
 - its spans sit on the right track
 - cars are loaded, unloaded or repaired as you set them up
 - `Player.log` has no errors about your industry, its spans or its loads
+
+---
+
+Corrections and suggestions are welcome as [issues or pull requests](https://github.com/Tetz95/Railroader-Map-Modding-Guides).

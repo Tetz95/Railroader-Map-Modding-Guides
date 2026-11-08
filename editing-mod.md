@@ -78,3 +78,7 @@ The release mod is a **new folder** in `Documents\Railroader\Mods`, with its own
 - Terrain: [Adding terrain tiles, section 4](terrain-tiles.md#4-set-up-the-release-pack).
 
 Every time you change something in the editor, copy the new `Data\Map.json` (or `Terrain\`) into the release mod again and raise its version.
+
+---
+
+Corrections and suggestions are welcome as [issues or pull requests](https://github.com/Tetz95/Railroader-Map-Modding-Guides).

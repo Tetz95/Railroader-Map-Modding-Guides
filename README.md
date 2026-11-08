@@ -3,7 +3,7 @@
 Guides to building on the Railroader 0.6 base map with the game's own Map Editor and mod files.
 
 The base map isn't officially open for building yet, and the editor and file formats may still change during
-Experimental. These guides will change with them. Corrections are welcome as issues or pull requests.
+Experimental. These guides will change with them. Corrections and suggestions are welcome as issues or pull requests.
 
 ## Guides
 
