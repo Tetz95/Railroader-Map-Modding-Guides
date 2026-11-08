@@ -8,9 +8,6 @@ To level ground on the base map, use **terrain masks**. A mask is a map object, 
 file with your track and industries and goes in the same release patch. The base map shapes its own yards and
 industry sites the same way, with 144 masks.
 
-> **Tested so far:** not yet in the game. This page is written from the game's code and the base map's own masks.
-> Corrections are welcome.
-
 ## Do you need one?
 
 Track already shapes its own roadbed: the ground is cut or filled to the track along a narrow strip, blending into the
