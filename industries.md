@@ -241,7 +241,7 @@ A car's **When Empty** waybill list offers every loader that can fill it. If you
 ## 6. Save
 
 Click **Save** at the top of the Map Editor. On a layered map, the game saves only what differs from the base map, as a
-patch. This file is in your mod's folder in `RailroaderMods\ModDev`, in its `Data` folder, named by your Map
+patch. This file is in your mod's folder in `Documents\Railroader\ModDev`, in its `Data` folder, named by your Map
 definition's `mapData` (usually `Data\Map.json`). The patch holds:
 
 - your new areas, industries, spans and components
@@ -359,8 +359,9 @@ So, if two mods change the same base-game industry, the one that loads last wins
 
 ## 8. Install and enable (game closed)
 
-1. Copy the pack folder to `RailroaderMods\Mods`.
-2. Add the mod to `RailroaderMods\Preferences.json` with `"enabled": true, "scope": 0`.
+1. Copy the pack folder to `Documents\Railroader\Mods` (or the `Mods` folder in the folder you gave with
+   `-homedir`, if you launch the game with it).
+2. Add the mod to `Documents\Railroader\Preferences.json` with `"enabled": true, "scope": 0`.
 3. When you release a new version, update the version there too, or startup hangs on a dialog.
 
 ## 9. Test

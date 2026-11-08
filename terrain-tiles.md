@@ -191,8 +191,9 @@ one edge, so check yours.
 
 ## 7. Install and enable (game closed)
 
-1. Copy the pack folder to `RailroaderMods\Mods`.
-2. Add the mod to `RailroaderMods\Preferences.json` with `"enabled": true, "scope": 0`.
+1. Copy the pack folder to `Documents\Railroader\Mods` (or the `Mods` folder in the folder you gave with
+   `-homedir`, if you launch the game with it).
+2. Add the mod to `Documents\Railroader\Preferences.json` with `"enabled": true, "scope": 0`.
 3. When you release a new version, update the version there too, or startup hangs on a dialog.
 
 ## 8. Test
