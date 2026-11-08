@@ -27,7 +27,9 @@ type, which can't be layered with the base map's terrain.
 
 ### 2.1 Create the Map definition
 
-In the Definition Editor, create a mod if you need one and select it in the list. Click **+ New**, choose **Map**, enter
+In the Definition Editor, select your editing mod in the list. If you don't have one yet, click **+ Create Mod** at the
+bottom of the list (see [Your editing mod](editing-mod.md#1-create-the-mod)); don't copy the game's own map pack into
+ModDev. Click **+ New**, choose **Map**, enter
 an id and click **Create & Edit**. The game saves it to your mod's `Definitions.json` straight away and shows "Map
 Definition Saved".
 

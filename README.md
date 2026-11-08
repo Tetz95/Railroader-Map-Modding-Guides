@@ -7,6 +7,8 @@ Experimental. These guides will change with them. Corrections are welcome as iss
 
 ## Guides
 
+- [Your editing mod and your release mod](editing-mod.md): start here. Creating the mod you edit in the Map Editor,
+  and how it differs from the mod you release.
 - [Adding terrain tiles](terrain-tiles.md): fetching new terrain beside the base map in the Map Editor, and adding it to
   the base map with a mod.
 - [Adding industries](industries.md): areas, industries, track spans and components in the Map Editor, changing
