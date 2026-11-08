@@ -205,3 +205,7 @@ Start the base map and travel to the new area. Check that the terrain renders, t
 seams, and `Player.log` has no terrain errors.
 
 Terrain doesn't add any track, so you'll need to add that separately if you want to run trains there.
+
+---
+
+Corrections and suggestions are welcome as [issues or pull requests](https://github.com/Tetz95/Railroader-Map-Modding-Guides).

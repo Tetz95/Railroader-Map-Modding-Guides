@@ -71,3 +71,7 @@ Click **Save**. Masks are saved in `Data\Map.json` with your other changes, unde
 
 The release mod needs nothing extra. Copy the new `Data\Map.json` into it again as in
 [Adding industries, section 7](industries.md#7-set-up-the-release-pack), and raise its version.
+
+---
+
+Corrections and suggestions are welcome as [issues or pull requests](https://github.com/Tetz95/Railroader-Map-Modding-Guides).
