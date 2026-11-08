@@ -13,9 +13,10 @@ An industry is made of four parts, created in this order:
 
 ## 1. Set up an editing map
 
-Follow steps 2.1 to 2.6 of [Adding terrain tiles](terrain-tiles.md#2-fetch-the-terrain-in-the-map-editor): create a Map definition,
-give it the layers, add an empty tile set and open it with **Edit Map**. You don't need to fetch any terrain unless your
-industry also needs new ground.
+Follow [Your editing mod and your release mod](editing-mod.md), sections 1 and 2: create your own editing mod with
+**+ Create Mod**, then a Map layered over the base map. **Don't copy the game's own map pack into ModDev:** saving
+would then write the whole base map, not just your changes. You don't need to fetch any terrain unless your industry
+also needs new ground.
 
 The base map's track, areas and industries all show in the editor. You can't change the base map itself, but your map
 saves your changes and additions on top of it.
