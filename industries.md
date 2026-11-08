@@ -64,6 +64,9 @@ segment's `a` or `b` end. **Flip** swaps the two ends.
 Give each span a clear **Id** (e.g. `spot1`, `coal`, `shed`). Components refer to spans by these ids, and
 **Referenced By** shows which components use each one.
 
+The terrain brushes can't change the base map's ground. To level a site for new track or an industry, use
+[terrain masks](terrain-masks.md).
+
 ## 5. Add the components
 
 In the industry's inspector, open the **Create Component** dropdown and pick a kind:
