@@ -135,8 +135,7 @@ per day, a 49,500 lb log car takes 49,500 / 3,000,000 = 0.0165 days, about 24 ga
 A good starting point is a Max Storage of about one day's production. Then a spur served once a day is full when the
 train arrives, and nothing is lost to a full store.
 
-With **Order Empties** on, the industry orders enough empty cars for what's in storage plus the production of the next
-days until it's likely served (up to 3 days), minus what the cars already there can hold.
+With **Order Empties** on, the industry orders its own empty cars: see *How an industry orders cars* below.
 
 #### IndustryUnloader
 
@@ -147,8 +146,8 @@ days until it's likely served (up to 3 days), minus what the cars already there 
 | **Storage Consumption Rate** | How much the industry uses up from storage per day. Set it to 0 when a **FormulaicIndustryComponent** uses this load instead. |
 
 The panel's "Consumes: *n* cars/day" is the consumption rate (or the formula's input) divided by the average capacity
-of the player's cars. With **Order Loads** on, the industry orders enough loaded cars for its use over the next days
-until it's likely served (up to 3), minus what's in storage and already on order.
+of the player's cars. With **Order Loads** on, the industry orders its own loaded cars: see *How an industry orders
+cars* below.
 
 #### FormulaicIndustryComponent
 
@@ -176,6 +175,41 @@ storage limits are the **Max Storage** of the loader or unloader that has the sa
 At tier 5 the mill uses 2,376,000 lb of logs a day: 48 log cars. Its log storage holds exactly one day of that. A log car
 is emptied in about one game minute (49,500 / 72,000,000 days). The lumber store holds two days of output and the
 woodchip store two days. At a tier 1 contract, everything is one eighth: 6 log cars a day.
+
+#### How an industry orders cars
+
+Industries order cars when the interchanges are served: once a day at the interchange service hour, and again for an
+extra service. Each loader with **Order Empties** on and each unloader with **Order Loads** on works out an amount of
+load, not a number of cars. With **Uses Contract** on, it only orders while the contract is active.
+
+**How far ahead it orders.** The industry keeps a running average of how many days its cars take from being waybilled
+to being delivered. It starts at 1 day and moves 20% of the way towards each new delivery's time, never above 3 days.
+The industry orders for that many days ahead, but at least until the next daily interchange service.
+
+**A loader (Order Empties)** orders empty cars for:
+
+> what's in storage + Production Rate × days ahead − the free space in empties already ordered or on their way
+
+So with 1 day ahead, 15 car loads of production a day and nothing in storage or on the way, it orders space for 15 car
+loads. If 5 empties are already on their way, it orders 10.
+
+**An unloader (Order Loads)** orders loaded cars for:
+
+> Storage Consumption Rate × days ahead − (what's in storage + loads already ordered or on their way)
+
+If the unloader uses no storage itself (rate 0), it uses the formula's input rate for that load instead. Only loads the
+game can import from off the map can be ordered this way. Logs, for example, can't, so a log unloader like the saw
+mill's has **Order Loads** off and gets its logs from the player's own log trains.
+
+Both rates are multiplied by the contract tier, as above.
+
+**From an amount to cars.** The order goes to an interchange that can reach the industry by track. When it's filled,
+the interchange picks a random car type that matches the component's **Car Type Filter**, and takes away that car's full capacity from the order. It keeps adding cars until the order
+is used up, so a part car load left over still gets a whole car.
+
+**Interchange space.** An interchange only takes as many cars as fit: 70% of its track length in 50 ft (15.24 m) car
+lengths, minus the cars already there. When it's full, the player gets a message that the interchange is at capacity. What
+wasn't delivered isn't kept: the industries work out their orders again at the next service.
 
 ### Example: a log loading spur
 
