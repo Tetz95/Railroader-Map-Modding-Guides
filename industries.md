@@ -96,6 +96,87 @@ Then fill in the component's fields:
 
 Renaming an id warns you if something still uses the old one. Every change can be undone with **Undo**.
 
+### The maths: rates and storage
+
+**Units.** All amounts are in the load's own units: pounds for most freight (logs, coal, lumber, pulpwood), gallons
+for liquids, or a count for loads that come in pieces. All rates are **per game day**; the game handles the time speed
+for you.
+
+**Car loads.** To think in cars, divide by what one car holds. The base log car holds 49,500 lb of logs, so:
+
+- 15 car loads of logs = 15 × 49,500 = 742,500 lb
+- 48 car loads = 48 × 49,500 = 2,376,000 lb
+
+Look up the capacity of the cars you expect to be used in their definitions (`loadSlots`, `maximumCapacity`).
+
+**Contracts.** With **Uses Contract** on, every rate below is multiplied by the contract tier the player signed:
+
+| Tier | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| Multiplier | 12.5% | 25% | 50% | 75% | 100% |
+
+With no contract, the industry does nothing at all. With **Uses Contract** off, it always runs at 100%. So set the rates
+for tier 5, and a tier 1 contract gets one eighth of them.
+
+#### IndustryLoader
+
+| Field | What it means |
+|---|---|
+| **Production Rate** | How much the industry makes per day. It goes into the industry's storage. Set it to 0 when a **FormulaicIndustryComponent** makes this load instead. |
+| **Max Storage** | The most the industry holds. When storage is full, production stops until cars take some away. |
+| **Car Load Rate** | How fast cars are filled, per day. Cars are only filled from what's in storage. |
+
+The industry panel's "Production: *n* cars/day" is the smaller of Production Rate and Car Load Rate, divided by the
+average capacity of the player's own cars that fit.
+
+How long it takes to fill one car is its capacity divided by the Car Load Rate. With the base log spurs' 3,000,000 lb
+per day, a 49,500 lb log car takes 49,500 / 3,000,000 = 0.0165 days, about 24 game minutes.
+
+A good starting point is a Max Storage of about one day's production. Then a spur served once a day is full when the
+train arrives, and nothing is lost to a full store.
+
+With **Order Empties** on, the industry orders enough empty cars for what's in storage plus the production of the next
+days until it's likely served (up to 3 days), minus what the cars already there can hold.
+
+#### IndustryUnloader
+
+| Field | What it means |
+|---|---|
+| **Car Unload Rate** | How fast cars are emptied, per day. Unloading stops while storage is full. |
+| **Max Storage** | The most the industry holds. |
+| **Storage Consumption Rate** | How much the industry uses up from storage per day. Set it to 0 when a **FormulaicIndustryComponent** uses this load instead. |
+
+The panel's "Consumes: *n* cars/day" is the consumption rate (or the formula's input) divided by the average capacity
+of the player's cars. With **Order Loads** on, the industry orders enough loaded cars for its use over the next days
+until it's likely served (up to 3), minus what's in storage and already on order.
+
+#### FormulaicIndustryComponent
+
+A formula turns its **Input Terms** into its **Output Terms**, each in units per day. It takes its inputs from the
+industry's storage and puts its outputs back there, so the industry also needs:
+
+- an **IndustryUnloader** for each input, with **Storage Consumption Rate** 0
+- an **IndustryLoader** for each output, with **Production Rate** 0
+
+Leave **Shared Storage** on for these, so they use the same storage as the formula.
+
+The formula runs at full speed while it has a full rate of every input and room for every output. It slows down when one
+of them runs short, and it stops ("Production Stopped") when any input is empty or any output's storage is full. Its
+storage limits are the **Max Storage** of the loader or unloader that has the same load.
+
+#### Example: Whittier Saw Mill
+
+| Component | Load | Settings |
+|---|---|---|
+| Unloader | Logs | Car Unload Rate 72,000,000; Max Storage 2,376,000; Storage Consumption Rate 0 |
+| Formula | Logs → Lumber + Woodchips | Input 2,376,000 logs; outputs 1,864,800 lumber, 480,000 woodchips |
+| Loader | Lumber | Car Load Rate 2,797,200; Max Storage 3,729,600; Production Rate 0 |
+| Loader | Woodchips | Car Load Rate 720,000; Max Storage 960,000; Production Rate 0 |
+
+At tier 5 the mill uses 2,376,000 lb of logs a day: 48 log cars. Its log storage holds exactly one day of that. A log car
+is emptied in about one game minute (49,500 / 72,000,000 days). The lumber store holds two days of output and the
+woodchip store two days. At a tier 1 contract, everything is one eighth: 6 log cars a day.
+
 ### Example: a log loading spur
 
 The base game's log spurs (Walker Lower and Upper Logs, Connelly Creek L1 to L3) are each one **IndustryLoader** with
@@ -105,7 +186,7 @@ its own span or spans. Set up yours like this:
 |---|---|
 | **Load** | Logs (`rr/logs`) |
 | **Car Load Rate** | 3,000,000 (the base spurs' value) |
-| **Production Rate** / **Max Storage** | about 742,500 for each track (the base spurs' values) |
+| **Production Rate** / **Max Storage** | about 742,500 for each track (the base spurs' values): 15 log cars a day, one day of storage |
 | **Order Empties** | off |
 | **Shared Storage** | off, so each spur keeps its own logs, like the base spurs |
 
