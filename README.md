@@ -17,6 +17,7 @@ Experimental. This guide will change with them. Replace `yourname/...` with your
 7. [Make the release mod](#7-make-the-release-mod)
 8. [Install and enable](#8-install-and-enable)
 9. [Test](#9-test)
+10. [Build on another map mod](#10-build-on-another-map-mod)
 
 ---
 
@@ -676,10 +677,20 @@ Keep the parts you need: `modifyDefinitions` for terrain tiles, `modifyMap` for 
 ```
 import json
 
-// Terrain tiles: adds your tile set to the base map.
+// Terrain tiles: adds your tile set to the base map's list, keeping the tile sets already in it.
 func modifyDefinitions(context) {
     context.modify("rr/bushnell-whittier", (obj) => {
-        obj["definition"]["terrainTileSets"] = ["rr/nc-bryson", "yourname/my-terrain"]
+        var sets = []
+        var old = obj["definition"]["terrainTileSets"]
+        if old == null {
+            sets.add("rr/nc-bryson")
+        } else {
+            for s in old {
+                sets.add(s)
+            }
+        }
+        sets.add("yourname/my-terrain")
+        obj["definition"]["terrainTileSets"] = sets
     })
 }
 
@@ -695,8 +706,9 @@ func modifyMap(map) {
 }
 ```
 
-**Terrain tiles:** the list is replaced whole, so `rr/nc-bryson` must stay in it. Two mods doing this will probably
-conflict, and the docs don't define which one wins. Any mod that needs both must list both tile sets.
+**Terrain tiles:** the script adds your tile set to the list instead of setting the list. Setting it (for example
+`= ["rr/nc-bryson", "yourname/my-terrain"]`) would drop the tile sets of map mods that loaded before yours, and their
+terrain would disappear.
 
 **The map check:** `modifyMap` runs for every map the game loads, so the check keeps your changes off other maps.
 `Ntky0ixdk` is a node at the end of the Sylva Interchange track. Any node id that only the base map has will do.
@@ -733,6 +745,79 @@ Load the base map (not the editor) and check that:
 - **Industries:** they and their names show on the map, their spans sit on the right track, and cars are loaded,
   unloaded or repaired as you set them up.
 - **Log:** `Player.log` has no errors about your terrain, industries, spans or loads.
+
+---
+
+## 10. Build on another map mod
+
+To add to another mod's track or terrain (a branch off someone's extension, more industries in their yard), follow
+sections 2 to 9 as for the base map, with the changes below. "The other mod" is the map mod you're building on.
+
+### 10.1 Install the other mod
+
+Install and enable the other mod in `Mods` (section 8) before you start. Your editing mod uses its terrain tile set,
+and your release mod will depend on it.
+
+### 10.2 Show its changes in the editor
+
+The Map Editor doesn't run mods' `Data.rl` scripts ("Data.rl doesn't run in the editor" in `Player.log`), so the other
+mod's track isn't there when you open your map. Give your editing mod a copy of its changes as a second map layer:
+
+1. Open the other mod's `Scripts\Data.rl` and find the file its `modifyMap` merges: `map.merge(json.load("..."))`.
+   In a mod made as in section 7 that's `map-patch.json`. If the script picks between files (for example one for use
+   with a third mod), take the one that matches the mods you play with.
+2. Copy that file into your editing mod's `Data` folder under a new name, e.g. `Data\other-mod.json`.
+3. Add a Map definition for it to your editing mod's `Definitions.json`, layered on the base map:
+
+   ```json
+   {
+     "identifier": "yourname/other-mod-layer",
+     "metadata": { "name": "Other Mod (layer, don't edit)", "description": "", "tags": [], "credits": "" },
+     "definition": { "kind": "Map", "mapData": "./other-mod.json", "mapLayers": ["rr/bushnell-whittier"] }
+   }
+   ```
+
+4. In your own Map definition, build on that layer instead of the base map, and add the other mod's tile set (if it
+   has one) between yours and the base map's:
+
+   ```json
+   "mapLayers": ["yourname/other-mod-layer"],
+   "terrainTileSets": ["yourname/my-terrain", "theirname/their-terrain", "rr/nc-bryson"]
+   ```
+
+   The layer is built on the base map, so the base map still comes with it. The other mod's tile set id is in its
+   `Definitions.json` (kind `TerrainTileSet`).
+
+When you open your map, the base map shows with the other mod's changes on it, and Save writes only what you changed
+on top of both.
+
+Your editing mod now has two maps, each with its own **Edit Map** button in the Definition Editor. Always use the one
+on **your own map's** row. Edit Map on the layer opens the copy of the other mod's file, and saving there changes the
+copy.
+
+If the other mod's script builds its changes in code instead of loading a file, there's no file to copy. Ask its
+author for one.
+
+When the other mod releases a new version, copy its file again (step 2). Then open your map and check that your
+track still joins theirs.
+
+### 10.3 The release mod
+
+Make it as in section 7, with three differences:
+
+- **`Info.json`:** require the other mod, so yours loads after it:
+
+  ```json
+  "dependencies": { "required": ["rr/game", "rr/nc-bryson-terrain", "theirname/their-mod"] }
+  ```
+
+- **The map check:** use a node that the other mod adds, instead of `Ntky0ixdk`. Your changes then go in only when
+  the other mod's track is there, and stay off the base map if someone removes the other mod.
+- **Terrain tiles:** use the script in section 7 as it is. It adds your tile set to the list, so the other mod's tile
+  set stays.
+
+Your patch is merged after the other mod's, so a field you changed on one of its industries or tracks overrides theirs,
+and a `null` in your patch deletes something it added.
 
 ---
 
