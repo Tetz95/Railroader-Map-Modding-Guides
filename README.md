@@ -3,13 +3,15 @@
 How to build on the Railroader 0.6 base map with the game's own Map Editor and mod files: new terrain, levelled
 ground, track and industries, released as a mod that adds them to the base map.
 
-The base map isn't officially open for building yet, and the editor and file formats may still change during
-Experimental. This guide will change with them. Replace `yourname/...` with your own ids throughout.
+The editor and file formats may still change during Experimental, and this guide will change with them. It's written
+for **0.6.3**, which added map patches (see [Versions](#versions)). The game's own documentation covers the same
+ground in less detail: [Map Modding](https://docs.railroadergame.com/modding/map-modding/). Replace `yourname/...`
+with your own ids throughout.
 
 ## Contents
 
-1. [Two mods: editing and release](#1-two-mods-editing-and-release)
-2. [Set up your editing mod](#2-set-up-your-editing-mod)
+1. [One mod: a map patch](#1-one-mod-a-map-patch)
+2. [Set up your mod](#2-set-up-your-mod)
 3. [Add terrain tiles](#3-add-terrain-tiles) (optional)
 4. [Shape the ground with terrain masks](#4-shape-the-ground-with-terrain-masks)
 5. [Add industries](#5-add-industries)
@@ -18,22 +20,31 @@ Experimental. This guide will change with them. Replace `yourname/...` with your
 8. [Install and enable](#8-install-and-enable)
 9. [Test](#9-test)
 10. [Build on another map mod](#10-build-on-another-map-mod)
+11. [The script way (Data.rl)](#11-the-script-way-datarl)
 
 ---
 
-## 1. Two mods: editing and release
+## 1. One mod: a map patch
 
-Building on the base map uses **two mods**. Keep them apart:
+A mod changes the base map with a **map patch**: a Map definition whose `role` is `patch`. The patch holds only your
+changes (new track and industries, changed fields, removals), and the game applies it on top of the base map while
+your mod is enabled. Players still pick the base map in New Game, and railroads started before they installed your mod
+get your changes too.
 
-| | Editing mod | Release mod |
+You work on the patch in the Map Editor and release a copy of it:
+
+| | Editing copy | Release copy |
 |---|---|---|
 | **Where** | `Documents\Railroader\ModDev\` | `Documents\Railroader\Mods\` |
 | **What it's for** | Working in the Map Editor. Only for you. | What you and other players install and play with. |
-| **Made by** | The game's **+ Create Mod** button | You, by hand, from the editing mod's files |
-| **Holds** | Your Map definition and the changes the editor saves | Only your changes, plus a small script that adds them to the base map |
+| **Made by** | The game's **+ Create Mod** button | You, by copying the editing copy's files |
+| **Holds** | Your patch and the changes the editor saves | The same files, under the release mod's own id |
 
 If you launch the game with `-homedir`, both folders are inside the folder you gave it instead of
 `Documents\Railroader`.
+
+Before 0.6.3 there were no patches, and a release mod added its changes with a small script. That still works, and is
+still needed in a few cases: see [section 11](#11-the-script-way-datarl).
 
 ### Don't copy the game's map
 
@@ -45,19 +56,15 @@ The base map is the game's own pack, `rr/nc-bryson-terrain`, in the game's insta
   as it is: it would put back your copy of everything on the map, undoing later game updates and other mods' changes.
 - Changes made in the install folder are lost when Steam updates the game.
 
-Your own editing mod is layered **over** the base map instead. The base map still shows in the editor, but Save only
-writes what you changed.
+Your patch is applied **over** the base map instead. The base map shows in the editor, but Save only writes what you
+changed.
 
-If you've already edited a copy, its `Data\Map.json` holds your changes inside the whole map. Set up your own editing
-mod as below and make the changes again there, then remove the copy from ModDev.
+If you've already edited a copy, its `Data\Map.json` holds your changes inside the whole map. Set up your own mod as
+below and make the changes again there, then remove the copy from ModDev.
 
 ---
 
-## 2. Set up your editing mod
-
-Your map has to have a tile set before it opens, or it fails to load with "Error loading server game". So **don't
-click Edit Map until step 2.7**: steps 2.1 to 2.6 only set up files. You need the tile set even if you won't add any
-terrain.
+## 2. Set up your mod
 
 ### 2.1 Create the mod
 
@@ -75,84 +82,57 @@ an empty `Definitions.json`, and selects the new mod in the list. A ModDev mod d
 
 ### 2.2 Create the Map definition
 
-With your mod selected, click **+ New**, choose **Map**, enter an id and click **Create & Edit**. The game saves it to
-your mod's `Definitions.json` straight away and shows "Map Definition Saved".
+With your mod selected, click **+ New**, choose **Map**, enter an id (e.g. `yourname/my-mod-dev-map`) and click
+**Create & Edit**. The game saves it to your mod's `Definitions.json` straight away and shows "Map Definition Saved".
 
 **Don't use Create Terrain:** it sets the origin to the coordinates you type, which can't be layered with the base
 map's terrain.
 
-### 2.3 Add the map's layers
+### 2.3 Make it a patch of the base map
 
-Do this either in the editor or in the file. Keep your tile set first, because terrain is read-only if another mod's set
-comes first.
-
-**In the editor:**
-
-- **a.** Click **Edit** on your Map. This is the small button beside **Edit Map**, not Edit Map itself.
-- **b.** Under **Object Definition** on the left, select **Map**.
-- **c.** Click **+** on each list to make a row, then type the id. Press Enter or click away after each one:
-
-  | List | Row | Id |
-  |---|---|---|
-  | **TerrainTileSets** | `[0]` | `yourname/my-terrain` |
-  | **TerrainTileSets** | `[1]` | `rr/nc-bryson` |
-  | **MapLayers** | `[0]` | `rr/bushnell-whittier` |
-
-  **-** deletes the last row. You'll type your tile set's id before it exists, which is fine: the editor only checks
-  the id's format.
-
-- **d.** Click **Save**, at the right-hand end of the bottom row of buttons. The **Log** window can cover it, so move
-  that if you need to. **Save Component** at the top is a different button.
-
-**Or in the file:** close the game, then in your mod's `Definitions.json`, find your new Map definition and add these
-fields to its `definition`:
+Close the game, then in your mod's `Definitions.json`, find your new Map definition and add these fields to its
+`definition`:
 
 ```json
-"mapLayers": ["rr/bushnell-whittier"],
-"terrainTileSets": ["yourname/my-terrain", "rr/nc-bryson"]
+"role": "patch",
+"mapLayers": ["rr/bushnell-whittier"]
 ```
 
-### 2.4 Close the game
+- **`role`:** `patch` makes it a patch. A patch doesn't show in New Game.
+- **`mapLayers`:** the map it patches, `rr/bushnell-whittier` for the base map. It must be the **last** entry; patches
+  of other mods you build on go before it ([section 10](#10-build-on-another-map-mod)).
+- **No tile set needed:** a patch uses the base map's terrain. You only add one for new terrain
+  ([section 3](#3-add-terrain-tiles)).
 
-Close the game if it's still open, and go to your mod's folder in `ModDev`.
+The game's own docs set the same fields in the Definition Editor instead, in the form that **Edit** opens (the small
+button beside **Edit Map**). This guide was tested with the file edit above.
 
-### 2.5 Add the tile set
-
-The **+ New** list has no tile set type, so this part is a file edit. In `Definitions.json`, add the tile set to the
-`objects` list:
+Your Map definition then looks like this:
 
 ```json
 {
-  "identifier": "yourname/my-terrain",
-  "metadata": { "name": "My Terrain", "description": "", "tags": [], "credits": "" },
-  "definition": { "kind": "TerrainTileSet", "path": "Terrain",
-                  "attribution": "Elevation: Mapterhorn (mapterhorn.com/attribution)" }
+  "identifier": "yourname/my-mod-dev-map",
+  "metadata": { "name": "My Mod (dev)", "description": "", "tags": [], "credits": "" },
+  "definition": { "kind": "Map", "role": "patch", "mapData": "./Map.json", "mapLayers": ["rr/bushnell-whittier"] }
 }
 ```
 
-### 2.6 Create `Terrain.json`
-
-Create `Terrain\Terrain.json` with exactly this. The origin must match the base map's exactly, so copy the digits:
-
-```json
-{"origin":{"latitude":35.38261413574219,"longitude":-83.49540710449219},"tileDimension":500,"heightmapResolution":513,"tiles":[]}
-```
-
-The empty `tiles` list is correct: the map has no tiles of its own yet.
-
-### 2.7 Open the map
+### 2.4 Open the map
 
 Start the game, open the Definition Editor, select your mod in the list and click **Edit Map**. The base map's terrain,
-track, areas and industries all show. You can't change the base map itself, but your map saves your changes and
+track, areas and industries all show. You can't change the base map itself, but your patch saves your changes and
 additions on top of it.
 
-Your editing mod now looks like this:
+The terrain is read-only in a patch: the editor says "Patch terrain editing is not yet supported." Shape the ground
+with masks ([section 4](#4-shape-the-ground-with-terrain-masks)), and make new terrain tiles as in
+[section 3](#3-add-terrain-tiles).
+
+Your mod now looks like this:
 
 ```
 Documents\Railroader\ModDev\my-mod-dev\
   Info.json
-  Definitions.json      your Map and tile set definitions
-  Terrain\Terrain.json  your terrain tiles (none yet)
+  Definitions.json      your Map definition (the patch)
   Data\Map.json         your changes to the base map, written by Save (section 6)
 ```
 
@@ -163,10 +143,51 @@ Documents\Railroader\ModDev\my-mod-dev\
 Only needed if you want to build beyond the edge of the base map. To change the ground **on** the base map, use
 masks ([section 4](#4-shape-the-ground-with-terrain-masks)).
 
-> **Tested so far:** fetching, checking `Terrain.json` and the seams in the game on a test map. The release steps were
-> tested with other tiles, not with tiles fetched here.
+A patch can't edit terrain, so the tiles are made in a second ModDev mod with an ordinary map (not a patch), and then
+added to your patch.
 
-### 3.1 Choose your tiles
+> **Tested so far:** fetching, checking `Terrain.json` and the seams in the game on a test map, and a patch showing
+> its tile set in front of the base map's terrain, in the editor and in play.
+
+### 3.1 Make a terrain mod
+
+Your terrain map has to have a tile set before it opens, or it fails to load with "Error loading server game". So
+**don't click Edit Map until step 3.1.5**: the steps before only set up files.
+
+1. **Create the mod:** as in [2.1](#21-create-the-mod), with the id `yourname/my-terrain-dev`, and a Map definition as
+   in [2.2](#22-create-the-map-definition). Don't make this one a patch.
+2. **Add the map's layers:** close the game, then add these fields to the Map definition's `definition`. Keep your tile
+   set first, because terrain is read-only if another mod's set comes first:
+
+   ```json
+   "mapLayers": ["rr/bushnell-whittier"],
+   "terrainTileSets": ["yourname/my-terrain", "rr/nc-bryson"]
+   ```
+
+3. **Add the tile set:** the **+ New** list has no tile set type, so add it to the `objects` list in
+   `Definitions.json`:
+
+   ```json
+   {
+     "identifier": "yourname/my-terrain",
+     "metadata": { "name": "My Terrain", "description": "", "tags": [], "credits": "" },
+     "definition": { "kind": "TerrainTileSet", "path": "Terrain",
+                     "attribution": "Elevation: Mapterhorn (mapterhorn.com/attribution)" }
+   }
+   ```
+
+4. **Create `Terrain\Terrain.json`** with exactly this. The origin must match the base map's exactly, so copy the
+   digits:
+
+   ```json
+   {"origin":{"latitude":35.38261413574219,"longitude":-83.49540710449219},"tileDimension":500,"heightmapResolution":513,"tiles":[]}
+   ```
+
+   The empty `tiles` list is correct: the map has no tiles of its own yet.
+
+5. **Open the map:** start the game, select the terrain mod in the Definition Editor and click **Edit Map**.
+
+### 3.2 Choose your tiles
 
 - **Tile size and position:** each tile is 500 x 500 m. Tile `(x, y)` starts at world `(x * 500, y * 500)`, with X
   running east and Z running north.
@@ -178,7 +199,7 @@ masks ([section 4](#4-shape-the-ground-with-terrain-masks)).
   - latitude = `35.3826 + Z / 111320`
   - longitude = `-83.4954 + X / 90760`
 
-### 3.2 Fetch the terrain
+### 3.3 Fetch the terrain
 
 1. In the Map Editor, select **Terrain**, set **Mode** to **Tiles** and click **Fetch Terrain...**. The Tiles mode
    shows "Coverage: 0 tiles" at first.
@@ -191,15 +212,15 @@ accident, close the game, delete its `tile_XXX_YYY.riff` and remove its entry fr
 
 Tiles are written to `Terrain\` as soon as they're fetched. Reopen the map with **Edit Map** to check them.
 
-### 3.3 Check `Terrain.json`
+### 3.4 Check `Terrain.json`
 
 Open `Terrain\Terrain.json` and check that:
 
-- `origin` still has the digits from step 2.6
+- `origin` still has the digits from step 3.1
 - `tiles` has the positions you expected, with none from the base map's list
 - `tileDimension` is 500 and `heightmapResolution` is 513
 
-### 3.4 Check the seams
+### 3.5 Check the seams
 
 Neighbouring tiles need matching heights along their shared edges, or you'll see steps in the ground.
 
@@ -211,18 +232,35 @@ one edge, so check yours.
 - **Limitation:** brushes only get the edges close, not identical, and the base tiles can't be edited. To shape the
   ground on the base map's side, use masks ([section 4](#4-shape-the-ground-with-terrain-masks)).
 
-Terrain doesn't add any track, so lay that in the editor as well if you want to run trains there.
+### 3.6 Add the tiles to your patch
+
+With the game closed:
+
+1. Copy the terrain mod's `Terrain` folder into your patch mod (`ModDev\my-mod-dev\Terrain`).
+2. Copy the tile set definition (from step 3.1.3) into your patch mod's `Definitions.json`.
+3. Add your tile set to the patch's Map definition:
+
+   ```json
+   "terrainTileSets": ["yourname/my-terrain"]
+   ```
+
+   A patch lists only its own tile sets, not `rr/nc-bryson`. They go in front of the base map's terrain: where both
+   have a tile, yours is used. They must share the base map's origin, tile size and resolution, which tiles made as
+   above do.
+
+Reopen your patch with **Edit Map**: the new terrain shows (read-only), and you can lay track on it. When you change
+the terrain later, do it in the terrain mod and copy the `Terrain` folder again.
 
 ---
 
 ## 4. Shape the ground with terrain masks
 
-The base map's terrain tiles belong to the game, so the terrain brushes can't change them. If you try, the editor says
-"This map's terrain comes from another pack's tile set, which this session cannot write to." Brushes only work on
-tiles your own mod fetched ([section 3](#3-add-terrain-tiles)).
+The terrain brushes don't work in a patch ("Patch terrain editing is not yet supported"), and the base map's tiles
+belong to the game anyway. Brushes only work in a terrain mod, on the tiles it fetched
+([section 3](#3-add-terrain-tiles)).
 
-To level ground on the base map, use **terrain masks**. A mask is a map object, like a prop: it's saved in your map
-file with your track and industries and goes in the same release file. The base map shapes its own yards and industry
+To level ground on the base map, use **terrain masks**. A mask is a map object, like a prop: it's saved in your patch
+with your track and industries and goes in the same release file. The base map shapes its own yards and industry
 sites the same way, with 144 masks.
 
 ### 4.1 Do you need one?
@@ -258,6 +296,9 @@ Select the mask and set these in the inspector. The editor shows the same descri
   height.
 - **Height:** the ground is levelled to the mask's own height, the Y of its **Position**. For a curve, the height runs
   along the curve from end A to end B, so ends at different heights make an even slope.
+- **Tilt (rectangle and circle):** since 0.6.3, tilting the mask (an X or Z value in its **Rotation**, not just Y)
+  levels the ground to a sloped plane through its position instead of a flat one, up to 45°. A 10° tilt falls about
+  1.76 m every 10 m. Check which way it falls in the editor: in our test, `"rotation": [10, 0, 0]` fell towards +Z.
 - **Radius:** the footprint, in metres. On a rectangle it's added around the size and rounds the corners. On a curve,
   **Size A** and **Size B** scale it at each end.
 - **Falloff:** how far beyond the footprint the levelled ground blends back into the terrain, in metres. Use more for a
@@ -321,7 +362,7 @@ In the area's inspector, click **Create Industry**. In the industry's inspector,
 
 | Field | What it does |
 |---|---|
-| **Id** | The industry's key. Start it with your name (e.g. `yourname-sawmill`) so it can't clash with the game's or another mod's industries. |
+| **Id** | The industry's key. Start it with your name (e.g. `yourname-sawmill`) so it can't clash with the game's or another mod's industries. The editor refuses an id it can't use, such as one already used by another industry or one containing `/`. |
 | **Name** | The name players see. |
 | **Position** | Where the industry's label sits on the map. |
 | **Uses Contract** | Whether the industry works under a contract that players sign, as most base-game customers do. |
@@ -354,7 +395,7 @@ In the industry's inspector, open the **Create Component** dropdown and pick a k
 | **IndustrySeller** | Sells a load into cars. |
 | **RepairTrack** | Repairs cars on its spans, using a repair parts load. |
 | **TeamTrack** | A public team track. |
-| **PassengerStop** | A passenger station. |
+| **PassengerStop** | A passenger station. Since 0.6.3, stations and lines are made under **Ops: Passenger** (see the game's [Ops: Passenger](https://docs.railroadergame.com/modding/map-modding/ops-passenger/) page); this guide doesn't cover them yet. |
 | **Interchange**, **InterchangedIndustryLoader**, **ProgressionIndustryComponent** | Interchanges, and industries tied to progression. |
 
 **The easy way to learn a kind:** select a base-game industry that does what you want in the outline and look at its
@@ -487,8 +528,9 @@ the interchange picks a random car type that matches the component's **Car Type 
 full capacity from the order. It keeps adding cars until the order is used up, so a part car load left over still gets
 a whole car.
 
-**Interchange space.** An interchange only takes as many cars as fit: 70% of its track length in 50 ft (15.24 m) car
-lengths, minus the cars already there. When it's full, the player gets a message that the interchange is at capacity.
+**Interchange space.** An interchange only takes as many cars as fit: a share of its track length in 50 ft (15.24 m)
+car lengths, minus the cars already there. The share is the game's **Interchange Fill To** setting (30% to 100%,
+default 70%; before 0.6.3 it was always 70%). When it's full, the player gets a message that the interchange is at capacity.
 What wasn't delivered isn't kept: the industries work out their orders again at the next service.
 
 ### 5.8 How deliveries are paid
@@ -610,11 +652,12 @@ A car's **When Empty** waybill list offers every loader that can fill it. If you
 
 ---
 
+
 ## 6. Save and check your changes
 
-Click **Save** at the top of the Map Editor. Your map is layered over the base map, so the game saves only what differs
-from it. The file is in your editing mod's `Data` folder, named by your Map definition's `mapData` (usually
-`Data\Map.json`). It holds:
+Click **Save** at the top of the Map Editor. **Save** is always available and turns orange when there are unsaved
+changes. Your map is a patch, so the game saves only what differs from the base map. The file is in your mod's `Data`
+folder, named by your Map definition's `mapData` (usually `Data\Map.json`). It holds:
 
 - your new track, masks, props, areas, industries, spans and components
 - the fields you changed on the base map's own ones
@@ -627,19 +670,23 @@ in the editor and save again.
 
 ## 7. Make the release mod
 
-The release mod is a **new folder**, with its own id (e.g. `yourname/my-mod`, without `-dev`). Don't move or rename the
-editing mod: keep it for your next changes.
+The release mod is a **copy** of your editing mod in `Mods`, with its own ids. Don't move or rename the editing mod:
+keep it for your next changes.
 
 ```
-My Mod/
+Documents\Railroader\Mods\My Mod\
   Info.json
-  map-patch.json        copy of the editing mod's Data\Map.json (track, masks, industries)
-  Scripts/Data.rl
-  Definitions.json      only if you added terrain tiles
-  Terrain/              only if you added terrain tiles: copy of the editing mod's Terrain folder
+  Definitions.json      your patch (and your tile set, if you added terrain)
+  Data\Map.json         copy of the editing mod's Data\Map.json (track, masks, industries)
+  Terrain\              only if you added terrain tiles
 ```
 
-These files don't need an ADK build. Every time you change something in the editor, copy the new `Data\Map.json` (and
+1. Copy the editing mod's folder into `Mods` under a new name, e.g. `My Mod`.
+2. In its `Info.json`, give it its own id (e.g. `yourname/my-mod`, without `-dev`), name and version.
+3. In its `Definitions.json`, give the Map definition its own id too (e.g. `yourname/my-mod-map`), so it can't clash
+   with the editing copy's.
+
+There's no script and no ADK build. Every time you change something in the editor, copy the new `Data\Map.json` (and
 `Terrain\`) into the release mod again and raise its version.
 
 ### `Info.json`
@@ -654,21 +701,134 @@ These files don't need an ADK build. Every time you change something in the edit
 }
 ```
 
-`rr/nc-bryson-terrain` is the game's own pack holding the base map. Requiring it makes your mod load after it, so your
-script can find the base map. Without it, mods load in alphabetical order of their ids, and an id sorting before `rr/`
-(such as `abc/...`) fails with "Definition rr/bushnell-whittier not found". Also add any mod whose loads, cars or track
-your changes use.
+`rr/nc-bryson-terrain` is the game's own pack holding the base map. Requiring it makes your mod load after it. Also add
+any mod whose loads, cars or track your changes use.
 
-### `Definitions.json` (terrain tiles only)
+### What the editor shows
+
+The editor shows the base map with only the patches your patch lists in `mapLayers`. Other map mods you have enabled
+in `Mods`, your own release copy included, don't show there: they're applied only in play. So you can keep your release
+mod enabled while you edit. To work next to another mod's changes, build on it as in
+[section 10](#10-build-on-another-map-mod).
+
+---
+
+## 8. Install and enable
+
+With the game closed:
+
+1. Copy the release mod's folder to `Documents\Railroader\Mods` (or the `Mods` folder in the folder you gave with
+   `-homedir`, if you launch the game with it).
+2. Add the mod to `Documents\Railroader\Preferences.json` with `"enabled": true, "scope": 0`. Scope 0 is the default,
+   unscoped: a patch only works in an unscoped mod, so every player builds the same map.
+3. When you release a new version, update the version there too, or startup hangs on a dialog.
+
+Players' existing railroads get the patch too, from the next time they load them with your mod enabled.
+
+---
+
+## 9. Test
+
+Load the base map (not the editor) and check that:
+
+- **Terrain:** your tiles render, with no gaps or steps at the seams.
+- **Ground:** masked areas are level (or sloped as you set them), and nearby track, roads and buildings aren't buried
+  or left in the air.
+- **Track:** your track is there and connects.
+- **Industries:** they and their names show on the map, their spans sit on the right track, and cars are loaded,
+  unloaded or repaired as you set them up.
+- **Log:** `Player.log` has no errors about your patch, terrain, industries, spans or loads. A patch the game can't use
+  is skipped with a message saying why, and the map loads without it.
+
+---
+
+## 10. Build on another map mod
+
+To add to another mod's track or terrain (a branch off someone's extension, more industries in their yard), follow
+sections 2 to 9 as for the base map, with the changes below. "The other mod" is the map mod you're building on.
+
+### 10.1 Install the other mod
+
+Install and enable the other mod in `Mods` ([section 8](#8-install-and-enable)) before you start, and add it to your
+release mod's `Info.json`:
 
 ```json
-{ "objects": [{
-  "identifier": "yourname/my-terrain",
-  "metadata": { "name": "My Terrain", "description": "...", "tags": [], "credits": "" },
-  "definition": { "kind": "TerrainTileSet", "path": "Terrain",
-                  "attribution": "Your elevation source" }
-}]}
+"dependencies": { "required": ["rr/game", "rr/nc-bryson-terrain", "theirname/their-mod"] }
 ```
+
+### 10.2 If the other mod is a patch
+
+Look in the other mod's `Definitions.json` for a definition of kind `Map` with `"role": "patch"`. If there is one,
+build on it directly: list its id in your patch's `mapLayers`, **before** the base map:
+
+```json
+"mapLayers": ["theirname/their-map", "rr/bushnell-whittier"]
+```
+
+- The editor opens the base map with their patch on it, and Save writes only your changes.
+- In play, your patch is applied after theirs, so a field you change on one of their industries or tracks overrides
+  theirs, and a `null` in your patch deletes something they added.
+- Your mod must require theirs ([10.1](#101-install-the-other-mod)). Otherwise the game skips your patch with a message
+  that your mod doesn't require theirs.
+- To build on several patches, list them all, topmost first, with the base map last.
+
+### 10.3 If the other mod uses a script
+
+If the other mod adds its changes with a `Scripts\Data.rl` instead (as mods made before 0.6.3 do), the editor doesn't
+show them: it doesn't run scripts ("Data.rl doesn't run in the editor" in `Player.log`). Give your editing mod a copy
+of their changes as a patch to build on:
+
+1. Open the other mod's `Scripts\Data.rl` and find the file its `modifyMap` merges: `map.merge(json.load("..."))`.
+   If the script picks between files (for example one for use with a third mod), take the one that matches the mods
+   you play with.
+2. Copy that file into your editing mod's `Data` folder under a new name, e.g. `Data\other-mod.json`.
+3. Add a patch for it to your editing mod's `Definitions.json`:
+
+   ```json
+   {
+     "identifier": "yourname/other-mod-layer",
+     "metadata": { "name": "Other Mod (layer, don't edit)", "description": "", "tags": [], "credits": "" },
+     "definition": { "kind": "Map", "role": "patch", "mapData": "./other-mod.json", "mapLayers": ["rr/bushnell-whittier"] }
+   }
+   ```
+
+4. Build your own patch on it: `"mapLayers": ["yourname/other-mod-layer", "rr/bushnell-whittier"]`.
+
+Your editing mod now has two maps, each with its own **Edit Map** button. Always use the one on **your own map's** row:
+Edit Map on the layer opens the copy of the other mod's file, and saving there changes the copy. When the other mod
+releases a new version, copy its file again (step 2), then open your map and check that your track still joins theirs.
+
+The copy is only for editing. Release your mod the script way ([section 11](#11-the-script-way-datarl)), so your
+changes go in after theirs, checking for one of the nodes **their** mod adds. Your changes then go in only when their
+track is there, and stay off the base map if someone removes their mod.
+
+If the other mod's script builds its changes in code instead of loading a file, there's no file to copy. Ask its
+author for one, or to release it as a patch.
+
+---
+
+## 11. The script way (Data.rl)
+
+Before 0.6.3, a release mod added its changes with a script instead of a patch. Use this way when:
+
+- you build on a mod that uses a script ([10.3](#103-if-the-other-mod-uses-a-script))
+- your changes depend on which other mods are installed (a patch is always applied as it is)
+- you support players still on 0.6.2 or earlier
+
+Edit as in sections 2 to 6. The release mod then holds your saved changes under another name, and a script:
+
+```
+My Mod/
+  Info.json
+  map-patch.json        copy of the editing mod's Data\Map.json (track, masks, industries)
+  Scripts/Data.rl
+  Definitions.json      only if you added terrain tiles: just the TerrainTileSet, not the Map definition
+  Terrain/              only if you added terrain tiles
+```
+
+`Info.json` is as in [section 7](#7-make-the-release-mod). Requiring `rr/nc-bryson-terrain` matters more here: without
+it, mods load in alphabetical order of their ids, and an id sorting before `rr/` (such as `abc/...`) fails with
+"Definition rr/bushnell-whittier not found".
 
 ### `Scripts/Data.rl`
 
@@ -711,7 +871,12 @@ func modifyMap(map) {
 terrain would disappear.
 
 **The map check:** `modifyMap` runs for every map the game loads, so the check keeps your changes off other maps.
-`Ntky0ixdk` is a node at the end of the Sylva Interchange track. Any node id that only the base map has will do.
+`Ntky0ixdk` is a node at the end of the Sylva Interchange track. Any node id that only the base map has will do, but
+choose one the game is unlikely to remove: a game update that reshapes track can delete nodes, and then the check
+quietly fails and your changes stop going in, with no error. 0.6.3 reshaped the Sylva switch and removed a node
+there that at least one mod's check used. A node your
+own track joins is a good choice, since your track needs it anyway. After every game update, load the map and check
+that your changes are still there.
 
 **How `map.merge` combines them:**
 
@@ -722,106 +887,20 @@ terrain would disappear.
 
 So, if two mods change the same base-game industry, the one that loads last wins on each field it sets.
 
----
-
-## 8. Install and enable
-
-With the game closed:
-
-1. Copy the release mod's folder to `Documents\Railroader\Mods` (or the `Mods` folder in the folder you gave with
-   `-homedir`, if you launch the game with it).
-2. Add the mod to `Documents\Railroader\Preferences.json` with `"enabled": true, "scope": 0`.
-3. When you release a new version, update the version there too, or startup hangs on a dialog.
-
----
-
-## 9. Test
-
-Load the base map (not the editor) and check that:
-
-- **Terrain:** your tiles render, with no gaps or steps at the seams.
-- **Ground:** masked areas are level, and nearby track, roads and buildings aren't buried or left in the air.
-- **Track:** your track is there and connects.
-- **Industries:** they and their names show on the map, their spans sit on the right track, and cars are loaded,
-  unloaded or repaired as you set them up.
-- **Log:** `Player.log` has no errors about your terrain, industries, spans or loads.
-
----
-
-## 10. Build on another map mod
-
-To add to another mod's track or terrain (a branch off someone's extension, more industries in their yard), follow
-sections 2 to 9 as for the base map, with the changes below. "The other mod" is the map mod you're building on.
-
-### 10.1 Install the other mod
-
-Install and enable the other mod in `Mods` (section 8) before you start. Your editing mod uses its terrain tile set,
-and your release mod will depend on it.
-
-### 10.2 Show its changes in the editor
-
-The Map Editor doesn't run mods' `Data.rl` scripts ("Data.rl doesn't run in the editor" in `Player.log`), so the other
-mod's track isn't there when you open your map. Give your editing mod a copy of its changes as a second map layer:
-
-1. Open the other mod's `Scripts\Data.rl` and find the file its `modifyMap` merges: `map.merge(json.load("..."))`.
-   In a mod made as in section 7 that's `map-patch.json`. If the script picks between files (for example one for use
-   with a third mod), take the one that matches the mods you play with.
-2. Copy that file into your editing mod's `Data` folder under a new name, e.g. `Data\other-mod.json`.
-3. Add a Map definition for it to your editing mod's `Definitions.json`, layered on the base map:
-
-   ```json
-   {
-     "identifier": "yourname/other-mod-layer",
-     "metadata": { "name": "Other Mod (layer, don't edit)", "description": "", "tags": [], "credits": "" },
-     "definition": { "kind": "Map", "mapData": "./other-mod.json", "mapLayers": ["rr/bushnell-whittier"] }
-   }
-   ```
-
-4. In your own Map definition, build on that layer instead of the base map, and add the other mod's tile set (if it
-   has one) between yours and the base map's:
-
-   ```json
-   "mapLayers": ["yourname/other-mod-layer"],
-   "terrainTileSets": ["yourname/my-terrain", "theirname/their-terrain", "rr/nc-bryson"]
-   ```
-
-   The layer is built on the base map, so the base map still comes with it. The other mod's tile set id is in its
-   `Definitions.json` (kind `TerrainTileSet`).
-
-When you open your map, the base map shows with the other mod's changes on it, and Save writes only what you changed
-on top of both.
-
-Your editing mod now has two maps, each with its own **Edit Map** button in the Definition Editor. Always use the one
-on **your own map's** row. Edit Map on the layer opens the copy of the other mod's file, and saving there changes the
-copy.
-
-If the other mod's script builds its changes in code instead of loading a file, there's no file to copy. Ask its
-author for one.
-
-When the other mod releases a new version, copy its file again (step 2). Then open your map and check that your
-track still joins theirs.
-
-### 10.3 The release mod
-
-Make it as in section 7, with three differences:
-
-- **`Info.json`:** require the other mod, so yours loads after it:
-
-  ```json
-  "dependencies": { "required": ["rr/game", "rr/nc-bryson-terrain", "theirname/their-mod"] }
-  ```
-
-- **The map check:** use a node that the other mod adds, instead of `Ntky0ixdk`. Your changes then go in only when
-  the other mod's track is there, and stay off the base map if someone removes the other mod.
-- **Terrain tiles:** use the script in section 7 as it is. It adds your tile set to the list, so the other mod's tile
-  set stays.
-
-Your patch is merged after the other mod's, so a field you changed on one of its industries or tracks overrides theirs,
-and a `null` in your patch deletes something it added.
+**Other scripts:** since 0.6.3, functions the game marks as internal start with `_`, and the game says mods shouldn't
+rely on them. Scripts that looked definitions up with `getDefinition` stop with "Undefined method 'getDefinition'"
+on 0.6.3: it's now `_getDefinition`, which works, but may change in a later update.
 
 ---
 
 ## Versions
+
+- **0.6.3 (2026-11-17):** map patches (`"role": "patch"`) are the main way to release changes; the script way is
+  section 11. Patch terrain is read-only, so terrain tiles are made in a separate terrain mod. Rectangle and circle
+  masks can be tilted. The editor refuses industry ids it can't use. Tested in the game: editing a patch with and
+  without terrain tiles (Save writes only the patch's changes), a released patch on a railroad started before it was
+  installed, and a tilted mask.
+- **0.6.0 to 0.6.2:** two mods, the release mod adding its changes with a script (section 11).
 
 Written for Railroader 0.6 (the 2026 Experimental update) and its built-in mod loader. Nothing here applies to Legacy
 (2025.1 and earlier) or its loaders.
